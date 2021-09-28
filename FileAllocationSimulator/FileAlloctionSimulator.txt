@@ -1,0 +1,321 @@
+//class block.java
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package fileallocationsimulator;
+
+/**
+ *
+ * @author Mohamed
+ */
+public class Block {
+    boolean reserved;
+    
+    Block()
+    {
+        reserved = false;
+    }
+    
+    void reserve()
+    {
+        reserved = true;
+    }
+    
+    void unreserve()
+    {
+        reserved = false;
+    }
+    
+    boolean isReserved()
+    {
+        return reserved;
+    }
+    
+}
+
+
+//class file.java
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package fileallocationsimulator;
+
+/**
+ *
+ * @author seif
+ */
+
+//not an actual file class
+public class File {
+    //length is how many blocks the file would take
+    int length;
+    private int  startingBlock;
+    String name;
+    
+    public File(int length, String name) {
+        this.length = length;
+        this.name = name;
+    }
+    
+    public void setStartingBlock(int index)
+    {
+        startingBlock = index;
+    }
+    
+    public int getStartingBlock()
+    {
+        return startingBlock;
+    }
+    
+}
+
+
+//class FileAllocationSimulator.java
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package fileallocationsimulator;
+
+import java.util.ArrayList;
+import java.util.Scanner;
+
+/**
+ *
+ * @author Seif
+ */
+public class FileAllocationSimulator {
+
+    /**
+     * @param args the command line arguments
+     */
+    public static void main(String[] args) {
+        Scanner op = new Scanner(System.in);
+        
+        System.out.println("Enter the number of operation : ");
+        System.out.println("1- Allocate a file in memory ");
+            System.out.println("2- exit");
+        int operation = op.nextInt();
+        
+        while (operation != 2){ 
+            switch (operation) {
+            case 1:
+                 
+        
+            
+            
+           
+        Scanner ms = new Scanner(System.in);
+        Scanner fn = new Scanner(System.in);
+        Scanner fl = new Scanner(System.in);
+        Scanner nof = new Scanner(System.in);
+        Scanner sof = new Scanner(System.in);
+        System.out.print("Enter number of memry blocks : ");
+        int memorySize = ms.nextInt();
+        Memory HDD = new Memory(memorySize);
+        System.out.print("Enter the number of files you want in memory : ");
+        int numOfFiles = nof.nextInt();
+        
+        File files[];
+        files = new File[numOfFiles];
+        for (int i =0;i<numOfFiles;i++){
+        System.out.print("Enter the name of the file : ");
+        String fileName = fn.next();
+        System.out.print("Enter the length of the file : ");
+        int fileLength = ms.nextInt();
+        System.out.print("Enter the starting of the file : ");
+        int startOfFile = sof.nextInt();
+        files[i] = new File(fileLength,fileName);
+        HDD.contigousAllocation(files[i], startOfFile);
+         
+        }
+        
+        HDD.printFilesInMemory();
+        
+            case 2:
+                System.exit(0);
+        
+            }
+        
+        
+ 
+        
+        
+        
+        }
+        
+
+
+    }
+    
+}
+
+//class memory.java
+
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package fileallocationsimulator;
+import java.util.Random; 
+
+import java.util.ArrayList;
+import java.util.Comparator;
+
+/**
+ *
+ * @author Mohamed & Sief
+ * 
+ */
+//basically a list of blocks 
+public class Memory {
+    
+    private ArrayList<Block> blockList = new ArrayList<>(); 
+    private int size;
+    private ArrayList<File> fileList = new ArrayList<>();
+ 
+    public Memory(int size) {
+        this.size = size;
+        
+        for(int i = 0; i < size; i++)
+        {
+            blockList.add(new Block());
+        }
+    }
+    
+    void printFilesInMemory()
+    {
+        
+        System.out.println("File Name\t\t filelength \t\t fileStart \t\t BlocksAllocated");
+        for(File f : fileList)
+        {
+            System.out.print(f.name + "\t\t\t " + f.length + "\t\t\t "+f.getStartingBlock() + "\t\t\t ");
+            for (int i =f.getStartingBlock();i<=f.length;i++){
+            System.out.print(i + "/ ");
+        }
+            System.out.println();
+        }
+        
+    }
+    
+    
+    
+    
+    public void contigousAllocation(File fileHypo){
+        
+        int fileLength = fileHypo.length;
+        Random rand = new Random(); 
+        int randomStart = rand.nextInt(size); 
+        
+        
+        fileList.sort(Comparator.comparing(a -> a.getStartingBlock()));
+        
+        
+        int noOfFiles = fileList.size();
+        
+        for(int i =0 ;i < noOfFiles; i++)
+        {
+           
+            int space =0;
+            
+               
+            if(randomStart + fileLength > size){
+                if(i + 1 > noOfFiles)
+                    space = size - (fileList.get(i).length + fileList.get(i).getStartingBlock());
+                else
+                    space = fileList.get(i+1).getStartingBlock() - (fileList.get(i).length + fileList.get(i).getStartingBlock()); 
+                
+                
+                randomStart = fileList.get(i).length; 
+            }
+            //if there is space reserve itt
+            System.out.println("test?");
+            if(fileLength == space)
+            {
+                
+                int finish = randomStart + fileLength;
+                
+                fileHypo.setStartingBlock(randomStart);
+                fileList.add(fileHypo);
+
+                while(randomStart <= finish)
+                {
+                    blockList.get(randomStart).reserve();
+                    randomStart++;
+                }        
+            }
+            else{
+                System.out.println("sorry not enough space...");
+            }   
+        }  
+    }
+    
+    //mainly for testing a case
+    public void contigousAllocation(File fileHypo, int start){
+        //will work randomised for now
+        int fileLength = fileHypo.length;
+        //Random rand = new Random(); 
+        int randomStart = start; 
+        
+        //to check whether or not the files is insertable
+        //we need to sort the fileList interms of starting point 
+        fileList.sort(Comparator.comparing(a -> a.getStartingBlock()));
+        fileList.add(fileHypo);
+        int noOfFiles = fileList.size();
+        //System.out.println(noOfFiles);
+
+        for(int i =0 ;i < noOfFiles; i++)
+        {
+            int space =999;
+            //if there are already allocated files we dont want to just
+            //randomly keep trying to land a file so to make sure we get the 
+            //most out of our allocation we made this condition
+           
+            if(randomStart + fileLength > size && blockList.get(randomStart).isReserved()){
+                
+                if(i + 1 > noOfFiles){
+                    space = size - (fileList.get(i).length + fileList.get(i).getStartingBlock());
+                }
+                else {
+                    space = fileList.get(i+1).getStartingBlock() - (fileList.get(i).length + fileList.get(i).getStartingBlock()); 
+                    
+                }
+                randomStart = fileList.get(i).length;
+
+            }
+            //if there is space reserve itt
+            if(fileLength <= space)
+            {
+
+                int finish = (randomStart + fileLength) -1;
+
+                fileHypo.setStartingBlock(randomStart);
+               
+
+                //fileList.add(fileHypo);
+
+                while(randomStart <= finish)
+                {
+                    blockList.get(randomStart).reserve();
+                   
+                    randomStart++;
+                }
+                break;
+            }
+            else{
+                System.out.println("sorry not enough space...");
+            }   
+        }  
+    }
+    
+    //search for the file then make all the files blocks deallocated
+    
+    
+    
+}
